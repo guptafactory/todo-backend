@@ -46,24 +46,16 @@ export async function login(req, res) {
 }
 
 export function logout(req, res) {
-  const { token } = req.cookies;
-
-  if (!token)
-    return res.status(404).json({
-      success: false,
-      message: "User not registered or Already logged out.",
-    });
-
   res
     .status(200)
-    .cookie("token", "", { expires: new Date(Date.now()) })
+    .cookie("token", "", { expires: new Date(Date.now()) }) // deleting the cookie
     .json({
       success: true,
       message: "User logged out successfully.",
     });
 }
 
-export function getMyDetails(req, res) {
+export function getUser(req, res) {
   res.status(200).json({
     success: true,
     message: "User details fetched successfully",
@@ -72,35 +64,51 @@ export function getMyDetails(req, res) {
 }
 
 export async function getAllUsers(req, res) {
-  const user = await User.find({});
+  const allUsers = await User.find({});
 
   return res.status(200).json({
     success: true,
     message: "All Users fetched successfully",
+    allUsers,
+  });
+}
+
+export async function updateUser(req, res) {
+  const { name, email, password } = req.body;
+  const id = req.user._id;
+
+  let updatedObj = {};
+  if (name) updatedObj.name = name;
+  if (email) updatedObj.email = email;
+  if (password) updatedObj.password = await bcrypt.hash(password, 10);
+
+  if (!updatedObj)
+    return res.status(404).json({
+      success: false,
+      message: "User details can't be updated! Provide valid credentials.",
+    });
+
+  const user = await User.findByIdAndUpdate(id, updatedObj, {
+    returnDocument: "after",
+  });
+  // update logic
+  res.status(200).json({
+    success: true,
+    message: "User details updated successfully",
     user,
   });
 }
 
-// export async function updateUser(req, res) {
-//   const { id } = req.params;
-//   const { newName } = req.body;
-//   console.log(req.body);
+export async function deleteUser(req, res) {
+  const id = req.user._id;
 
-//   await User.findByIdAndUpdate(id, { name: newName });
-//   // update logic
-//   res.json({
-//     success: true,
-//     message: "User details updated successfully",
-//   });
-// }
-
-// export async function deleteUser(req, res) {
-//   const { id } = req.params;
-
-//   await User.findByIdAndDelete(id);
-//   // delete logic
-//   res.json({
-//     success: true,
-//     message: "User deleted successfully",
-//   });
-// }
+  await User.findByIdAndDelete(id);
+  // delete logic
+  res
+    .status(201)
+    .cookie("token", "", { expires: new Date(Date.now()) }) // deleting the cookie
+    .json({
+      success: true,
+      message: "User deleted successfully",
+    });
+}
