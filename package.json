@@ -2,7 +2,7 @@
   "name": "todo-6pp",
   "version": "1.0.0",
   "description": "todo with crud",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js",
