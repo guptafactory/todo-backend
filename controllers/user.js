@@ -2,16 +2,17 @@ import bcrypt from "bcrypt";
 
 import User from "../models/user.js";
 import sendCookie from "./../utils/features.js";
+import ErrorHandler from "../utils/errorHandler.js";
 
-export async function register(req, res) {
+export async function registerUser(req, res, next) {
   const { name, email, password } = req.body;
+
+  if (!name || !email || !password)
+    return next(new ErrorHandler("User credentials are not complete.", 404));
+
   let user = await User.findOne({ email });
 
-  if (user)
-    return res.status(404).json({
-      success: false,
-      message: "User already registered",
-    });
+  if (user) return next(new ErrorHandler("User already registered", 404));
 
   const hashPassword = await bcrypt.hash(password, 10);
 
@@ -24,31 +25,34 @@ export async function register(req, res) {
   sendCookie(res, user, "User registered successfully", 201);
 }
 
-export async function login(req, res) {
+export async function loginUser(req, res) {
   const { email, password } = req.body;
+
+  if (!email || !password)
+    return next(new ErrorHandler("User credentials are not complete.", 404));
+
   const user = await User.findOne({ email }).select("+password");
 
   if (!user)
-    return res.status(404).json({
-      success: false,
-      message: "User not registered! Register first.",
-    });
+    return next(new ErrorHandler("User not registered! Register first.", 404));
 
   const isMatch = bcrypt.compare(password, user.password);
 
   if (!isMatch)
-    return res.status(404).json({
-      success: false,
-      message: "Incorrect password! Try again.",
-    });
+    return next(new ErrorHandler("Incorrect password! Try again.", 404));
 
   sendCookie(res, user, `Welcome back ${user.name}`, 200);
 }
 
-export function logout(req, res) {
+export function logoutUser(req, res) {
   res
-    .status(200)
-    .cookie("token", "", { expires: new Date(Date.now()) }) // deleting the cookie
+    .status(204)
+    .cookie("token", "", {
+      expires: new Date(Date.now()),
+      // sameSite: "lax", // default
+      sameSite: process.env.NODE_ENV === "Development" ? "lax" : "none",
+      secure: process.env.NODE_ENV === "Development" ? false : true,
+    }) // deleting the cookie
     .json({
       success: true,
       message: "User logged out successfully.",
@@ -75,7 +79,7 @@ export async function getAllUsers(req, res) {
 
 export async function updateUser(req, res) {
   const { name, email, password } = req.body;
-  const id = req.user._id;
+  const userId = req.user._id;
 
   let updatedObj = {};
   if (name) updatedObj.name = name;
@@ -83,16 +87,18 @@ export async function updateUser(req, res) {
   if (password) updatedObj.password = await bcrypt.hash(password, 10);
 
   if (!updatedObj)
-    return res.status(404).json({
-      success: false,
-      message: "User details can't be updated! Provide valid credentials.",
-    });
+    return next(
+      new ErrorHandler(
+        "User details can't be updated! Provide valid credentials.",
+        404
+      )
+    );
 
-  const user = await User.findByIdAndUpdate(id, updatedObj, {
+  const user = await User.findByIdAndUpdate(userId, updatedObj, {
     returnDocument: "after",
   });
-  // update logic
-  res.status(200).json({
+
+  res.status(201).json({
     success: true,
     message: "User details updated successfully",
     user,
@@ -100,12 +106,12 @@ export async function updateUser(req, res) {
 }
 
 export async function deleteUser(req, res) {
-  const id = req.user._id;
+  const userId = req.user._id;
 
-  await User.findByIdAndDelete(id);
-  // delete logic
+  await User.findByIdAndDelete(userId);
+
   res
-    .status(201)
+    .status(204)
     .cookie("token", "", { expires: new Date(Date.now()) }) // deleting the cookie
     .json({
       success: true,

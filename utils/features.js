@@ -8,6 +8,9 @@ function sendCookie(res, user, message, statuscode = 201) {
     .cookie("token", token, {
       httpOnly: true,
       maxAge: 15 * 60 * 1000, // 15 mins
+      // sameSite: "lax", // default
+      sameSite: process.env.NODE_ENV === "Development" ? "lax" : "none",
+      secure: process.env.NODE_ENV === "Development" ? false : true,
     })
     .json({
       success: true,
