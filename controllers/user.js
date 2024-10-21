@@ -5,43 +5,53 @@ import sendCookie from "./../utils/features.js";
 import ErrorHandler from "../utils/errorHandler.js";
 
 export async function registerUser(req, res, next) {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password)
-    return next(new ErrorHandler("User credentials are not complete.", 404));
+    if (!name || !email || !password)
+      return next(new ErrorHandler("User credentials are not complete.", 404));
 
-  let user = await User.findOne({ email });
+    let user = await User.findOne({ email });
 
-  if (user) return next(new ErrorHandler("User already registered", 404));
+    if (user) return next(new ErrorHandler("User already registered", 404));
 
-  const hashPassword = await bcrypt.hash(password, 10);
+    const hashPassword = await bcrypt.hash(password, 10);
 
-  user = await User.create({
-    name,
-    email,
-    password: hashPassword,
-  });
+    user = await User.create({
+      name,
+      email,
+      password: hashPassword,
+    });
 
-  sendCookie(res, user, "User registered successfully", 201);
+    sendCookie(res, user, "User registered successfully", 201);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function loginUser(req, res) {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password)
-    return next(new ErrorHandler("User credentials are not complete.", 404));
+    if (!email || !password)
+      return next(new ErrorHandler("User credentials are not complete.", 404));
 
-  const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
 
-  if (!user)
-    return next(new ErrorHandler("User not registered! Register first.", 404));
+    if (!user)
+      return next(
+        new ErrorHandler("User not registered! Register first.", 404)
+      );
 
-  const isMatch = bcrypt.compare(password, user.password);
+    const isMatch = bcrypt.compare(password, user.password);
 
-  if (!isMatch)
-    return next(new ErrorHandler("Incorrect password! Try again.", 404));
+    if (!isMatch)
+      return next(new ErrorHandler("Incorrect password! Try again.", 404));
 
-  sendCookie(res, user, `Welcome back ${user.name}`, 200);
+    sendCookie(res, user, `Welcome back ${user.name}`, 200);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export function logoutUser(req, res) {

@@ -27,7 +27,7 @@ export async function getAllTasks(req, res) {
 
   const allTasks = await Task.find({ user: userId });
 
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
     message: "All Tasks fetched successfully",
     allTasks,
