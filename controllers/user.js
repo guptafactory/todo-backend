@@ -29,7 +29,7 @@ export async function registerUser(req, res, next) {
   }
 }
 
-export async function loginUser(req, res) {
+export async function loginUser(req, res, next) {
   try {
     const { email, password } = req.body;
 
