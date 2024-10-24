@@ -48,7 +48,7 @@ export async function loginUser(req, res, next) {
     if (!isMatch)
       return next(new ErrorHandler("Incorrect password! Try again.", 404));
 
-    sendCookie(res, user, `Welcome back ${user.name}`, 200);
+    return sendCookie(res, user, `Welcome back ${user.name}`, 200);
   } catch (error) {
     next(error);
   }
