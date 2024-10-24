@@ -43,7 +43,7 @@ export async function loginUser(req, res, next) {
         new ErrorHandler("User not registered! Register first.", 404)
       );
 
-    const isMatch = bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch)
       return next(new ErrorHandler("Incorrect password! Try again.", 404));
@@ -55,7 +55,7 @@ export async function loginUser(req, res, next) {
 }
 
 export function logoutUser(req, res) {
-  res
+  return res
     .status(204)
     .cookie("token", "", {
       expires: new Date(Date.now()),
@@ -70,7 +70,7 @@ export function logoutUser(req, res) {
 }
 
 export function getUser(req, res) {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "User details fetched successfully",
     user: req.user,
@@ -108,7 +108,7 @@ export async function updateUser(req, res) {
     returnDocument: "after",
   });
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "User details updated successfully",
     user,
@@ -120,7 +120,7 @@ export async function deleteUser(req, res) {
 
   await User.findByIdAndDelete(userId);
 
-  res
+  return res
     .status(204)
     .cookie("token", "", { expires: new Date(Date.now()) }) // deleting the cookie
     .json({
