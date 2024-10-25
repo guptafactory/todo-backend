@@ -2,9 +2,9 @@ import express from "express";
 
 import isAuthenticated from "./../middlewares/auth.js";
 import {
-  registerUser,
   loginUser,
   logoutUser,
+  registerUser,
   getUser,
   getAllUsers,
   updateUser,
