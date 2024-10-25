@@ -56,7 +56,7 @@ export async function loginUser(req, res, next) {
 
 export function logoutUser(req, res) {
   return res
-    .status(204)
+    .status(200)
     .cookie("token", "", {
       expires: new Date(Date.now()),
       // sameSite: "lax", // default
@@ -121,7 +121,7 @@ export async function deleteUser(req, res) {
   await User.findByIdAndDelete(userId);
 
   return res
-    .status(204)
+    .status(200)
     .cookie("token", "", { expires: new Date(Date.now()) }) // deleting the cookie
     .json({
       success: true,
