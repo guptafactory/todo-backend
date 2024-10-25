@@ -15,7 +15,7 @@ export async function newTask(req, res, next) {
     user: req.user,
   });
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "Task created successfully",
     task,
@@ -27,7 +27,7 @@ export async function getAllTasks(req, res) {
 
   const allTasks = await Task.find({ user: userId });
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "All Tasks fetched successfully",
     allTasks,
@@ -54,7 +54,7 @@ export async function modifyTaskDetails(req, res) {
 
   await task.save();
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "Task details updated successfully",
     task,
@@ -77,7 +77,7 @@ export async function modifyTaskStatus(req, res) {
   task.isCompleted = !task.isCompleted;
   await task.save();
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "Task status updated successfully",
     task,
@@ -99,7 +99,7 @@ export async function deleteTask(req, res) {
 
   await task.deleteOne();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Task deleted successfully",
   });

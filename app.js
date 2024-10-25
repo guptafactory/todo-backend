@@ -23,7 +23,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(errorMiddleware);
 
 // Using routes
 app.use("/api/user", userRouter);
@@ -33,4 +32,5 @@ app.get("/", (req, res) => {
   res.send("<p>API working!</p>");
 });
 
+app.use(errorMiddleware);
 export default app;

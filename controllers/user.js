@@ -9,11 +9,11 @@ export async function registerUser(req, res, next) {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password)
-      return next(new ErrorHandler("User credentials are not complete.", 404));
+      return next(new ErrorHandler("User credentials are not complete.", 400));
 
     let user = await User.findOne({ email });
 
-    if (user) return next(new ErrorHandler("User already registered", 404));
+    if (user) return next(new ErrorHandler("User already registered", 400));
 
     const hashPassword = await bcrypt.hash(password, 10);
 
@@ -34,19 +34,19 @@ export async function loginUser(req, res, next) {
     const { email, password } = req.body;
 
     if (!email || !password)
-      return next(new ErrorHandler("User credentials are not complete.", 404));
+      return next(new ErrorHandler("User credentials are not complete.", 400));
 
     const user = await User.findOne({ email }).select("+password");
 
     if (!user)
       return next(
-        new ErrorHandler("User not registered! Register first.", 404)
+        new ErrorHandler("User not registered! Register first.", 400)
       );
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch)
-      return next(new ErrorHandler("Incorrect password! Try again.", 404));
+      return next(new ErrorHandler("Incorrect password! Try again.", 400));
 
     return sendCookie(res, user, `Welcome back ${user.name}`, 200);
   } catch (error) {
