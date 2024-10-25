@@ -1,3 +1,4 @@
+import { mongoose } from "mongoose";
 import Task from "../models/task.js";
 import ErrorHandler from "../utils/errorHandler.js";
 
@@ -6,7 +7,7 @@ export async function newTask(req, res, next) {
 
   if (!title || !description)
     return next(
-      new ErrorHandler("Title or description is invalid. Try Again!", 404)
+      new ErrorHandler("Title or description is invalid. Try Again!", 400)
     );
 
   const task = await Task.create({
@@ -36,17 +37,20 @@ export async function getAllTasks(req, res) {
 
 export async function modifyTaskDetails(req, res) {
   const userId = req.user._id;
-  const { taskId } = req.params;
   const { title, description } = req.body;
+  const { taskId } = req.params;
+
+  if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
+    return next(new ErrorHandler("Invalid Task Id. Try Again!", 400));
+  }
 
   const task = await Task.findById(taskId);
   const sameUser = task?.user.toString() === userId.toString(); // convert object to string
 
-  if (!title || !description || !task || !sameUser)
-    return res.status(404).json({
-      success: false,
-      message: "Task can't be updated! Provide valid details.",
-    });
+  if (!title || !description || !sameUser)
+    return next(
+      new ErrorHandler("Task can't be updated! Provide valid details.", 400)
+    );
 
   // update logic
   task.title = title;
@@ -61,18 +65,19 @@ export async function modifyTaskDetails(req, res) {
   });
 }
 
-export async function modifyTaskStatus(req, res) {
+export async function modifyTaskStatus(req, res, next) {
   const userId = req.user._id;
   const { taskId } = req.params;
+
+  if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
+    return next(new ErrorHandler("Invalid Task Id. Try Again!", 400));
+  }
 
   const task = await Task.findById(taskId);
   const sameUser = task?.user.toString() === userId.toString(); // convert object to string
 
   if (!task || !sameUser)
-    return res.status(404).json({
-      success: false,
-      message: "Invalid Task Id. Try Again!",
-    });
+    return next(new ErrorHandler("Invalid Task Id. Try Again!", 400));
 
   task.isCompleted = !task.isCompleted;
   await task.save();
@@ -84,18 +89,19 @@ export async function modifyTaskStatus(req, res) {
   });
 }
 
-export async function deleteTask(req, res) {
+export async function deleteTask(req, res, next) {
   const userId = req.user._id;
   const { taskId } = req.params;
+
+  if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
+    return next(new ErrorHandler("Invalid Task Id. Try Again!", 400));
+  }
 
   const task = await Task.findById(taskId);
   const sameUser = task?.user.toString() === userId.toString(); // convert object to string
 
   if (!task || !sameUser)
-    return res.status(404).json({
-      success: false,
-      message: "Invalid Task Id. Try Again!",
-    });
+    return next(new ErrorHandler("Invalid Task Id. Try Again!", 400));
 
   await task.deleteOne();
 
